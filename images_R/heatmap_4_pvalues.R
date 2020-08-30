@@ -73,7 +73,7 @@ draw_ht <- function(good_lncrna, vanya_g_v=c(), show_row_names=FALSE)
            post_hgd = ifelse(post_hgd < 1e-10, 10, -log10(post_hgd)),
            post_gsea = ifelse(post_gsea < 1e-10, 10, -log10(post_gsea))) %>%
     left_join(genya_aso, by='aso_id') %>%
-    mutate(Genya = factor(ifelse(is.na(n_marks), 'No', 'Yes'))) %>%
+    mutate(Epigenetics = factor(ifelse(is.na(n_marks), 'No', 'Yes'))) %>%
     mutate(Vanya = factor(ifelse(geneName %in% vanya_g_v, 'Yes', 'No')))
   rownames(ht_df)  <-  ht_df$aso_id
 
@@ -88,18 +88,18 @@ draw_ht <- function(good_lncrna, vanya_g_v=c(), show_row_names=FALSE)
                     #gap = unit(1, "mm"),
                     row_title_rot = 0)
   
-  genya_ht <- Heatmap(ht_df['Genya'],
+  genya_ht <- Heatmap(ht_df['Epigenetics'],
                       show_row_names = show_row_names,
-                      name='Genya_ASO',
+                      name='Epigenetics',
                       col = c('No' = 'white', 'Yes' = 'red'))
   
-  vanya_ht <- Heatmap(ht_df['Vanya'],
-                      show_row_names = show_row_names,
-                      name='Vanya',
-                      col = c('No' = 'white', 'Yes' = 'darkgreen'))
+  # vanya_ht <- Heatmap(ht_df['Vanya'],
+  #                     show_row_names = show_row_names,
+  #                     name='Vanya',
+  #                     col = c('No' = 'white', 'Yes' = 'darkgreen'))
   # log_ht + marks_ht
   
-  draw(log_ht + vanya_ht + genya_ht)
+  draw(log_ht + genya_ht)
 }
 #draw_ht(good_lncrna[1:half_good_n], vanya_genes)
 
