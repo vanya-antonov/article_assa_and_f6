@@ -34,8 +34,8 @@ draw_2_pvalues <- function(input_fn, title = '')
 }
 
 draw_2_pvalues(paste0(DATA_DIR, '2_pvalues.co.txt'), 'Co-transcriptional interactions')
-ggsave('2_pvalues_co.pdf', path = OUT_DIR, width = 5, height = 5)
+ggsave('two_pvalues_co.pdf', path = OUT_DIR, width = 5, height = 5)
 
 draw_2_pvalues(paste0(DATA_DIR, '2_pvalues.post.txt'), 'Post-transcriptional interactions')
-ggsave('2_pvalues_post.pdf', path = OUT_DIR, width = 5, height = 5)
+ggsave('two_pvalues_post.pdf', path = OUT_DIR, width = 5, height = 5)
 
