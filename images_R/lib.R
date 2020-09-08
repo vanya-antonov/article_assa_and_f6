@@ -17,4 +17,10 @@ OUT_DIR <- "../images/"
 
 # theme_set(theme_bw(base_size = 19))  # increase the font size: https://stackoverflow.com/a/11955412/310453
 
+get_good_aso <- function(df)
+{
+  df %>%
+    filter(hgd_pvalue < 0.01 | gsea_pvalue < 0.01) %>%
+    pull(aso_id)
+}
 

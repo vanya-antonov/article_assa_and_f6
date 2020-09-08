@@ -13,13 +13,6 @@ colnames(co_df) <- c('aso_id', 'all_trxs', 'de_trxs', 'assa_hits_all', 'assa_hit
 post_df <- read.delim(paste0(DATA_DIR, '2_pvalues.post.txt'), as.is=TRUE, header=FALSE)
 colnames(post_df) <- c('aso_id', 'all_trxs', 'de_trxs', 'assa_hits_all', 'assa_hits_de', 'hgd_pvalue', 'gsea_pvalue')
 
-get_good_aso <- function(df)
-{
-  df %>%
-    filter(hgd_pvalue < 0.01 | gsea_pvalue < 0.01) %>%
-    pull(aso_id)
-}
-
 good_co_v <- get_good_aso(co_df)
 good_post_v <- get_good_aso(post_df)
 
