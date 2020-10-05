@@ -1,0 +1,512 @@
+ht <- Heatmap(ht_df[, c('ASO_G0272888_AD_07', 'ASO_G0272888_AD_10', 'mEF_knockout')],
+name = 'Expression\nChange',
+col = c('up' = 'darkgreen', 'down' = 'red'),
+show_row_names = FALSE,
+row_title_rot = 45)
+pdf(paste0(OUT_DIR, 'other/chaserr_common_genes_ht.pdf'), width = 5, height = 8)
+draw(ht, row_title = sprintf('%d common target genes', nrow(ht_df)))
+dev.off()
+ht <- Heatmap(ht_df[, c('ASO_G0272888_AD_07', 'ASO_G0272888_AD_10', 'mEF_knockout')],
+name = 'Expression\nChange',
+col = c('up' = 'darkgreen', 'down' = 'red'),
+show_row_names = FALSE,
+row_title_rot = 0)
+pdf(paste0(OUT_DIR, 'other/chaserr_common_genes_ht.pdf'), width = 5, height = 8)
+draw(ht, row_title = sprintf('%d common target genes', nrow(ht_df)))
+dev.off()
+ht_df
+ht_df %>% filter(s_val == 'down down down') %>% nrow()
+n_ddd <- ht_df %>% filter(s_val == 'down down down') %>% nrow()
+n_ddd / n_row(ht_df)
+n_ddd / nrow(ht_df)
+ht_df %>% filter(s_val == 'down down down') %>% nrow()
+source('lib.R')
+library(ComplexHeatmap)
+###
+common3_v <- read.delim(paste0(DATA_DIR, "chaserr_common3.txt"), as.is=TRUE, header=FALSE)$V1
+aso_07_g_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_07.DE_Summary_gene'), as.is=TRUE, header=TRUE) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol)) %>%
+# https://stackoverflow.com/a/60861471/310453
+filter(!duplicated(geneSymbol)) %>%
+filter(geneSymbol %in% common3_v) %>%
+mutate(ASO_G0272888_AD_07 = ifelse(log2FC < 0, 'down', 'up')) %>%
+rename(log2FC_ASO_G0272888_AD_07 = log2FC) %>%
+select(geneSymbol, ASO_G0272888_AD_07, log2FC_ASO_G0272888_AD_07)
+head(aso_07_g_df)
+aso_10_g_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_10.DE_Summary_gene'), as.is=TRUE, header=TRUE) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol)) %>%
+# https://stackoverflow.com/a/60861471/310453
+filter(!duplicated(geneSymbol)) %>%
+filter(geneSymbol %in% common3_v) %>%
+mutate(ASO_G0272888_AD_10 = ifelse(log2FC < 0, 'down', 'up')) %>%
+rename(log2FC_ASO_G0272888_AD_10 = log2FC) %>%
+select(geneSymbol, ASO_G0272888_AD_10, log2FC_ASO_G0272888_AD_10)
+head(aso_10_g_df)
+from_mouse_df <- read.delim(paste0(DATA_DIR, 'chaserr_orthologs.txt'), as.is=TRUE, header=TRUE) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', human_gene_name)) %>%
+filter(!is.na(log2fc)) %>%
+filter(!duplicated(geneSymbol)) %>%
+rename(log2FC = log2fc) %>%
+mutate(mEF_knockout = ifelse(log2FC < 0, 'down', 'up')) %>%
+rename(log2FC_mEF_knockout = log2FC) %>%
+select(geneSymbol, mEF_knockout, log2FC_mEF_knockout)
+head(from_mouse_df)
+ht_df <- aso_07_g_df %>%
+left_join(aso_10_g_df, by='geneSymbol') %>%
+left_join(from_mouse_df, by='geneSymbol') %>%
+mutate(s_val = paste(ASO_G0272888_AD_07, ASO_G0272888_AD_10, mEF_knockout)) %>%
+arrange(s_val)
+# ?Heatmap
+ht <- Heatmap(ht_df[, c('ASO_G0272888_AD_07', 'ASO_G0272888_AD_10', 'mEF_knockout')],
+name = 'Expression\nChange',
+col = c('up' = 'darkgreen', 'down' = 'red'),
+show_row_names = FALSE,
+row_title_rot = 0)
+pdf(paste0(OUT_DIR, 'other/chaserr_common_genes_ht.pdf'), width = 4, height = 8)
+draw(ht, row_title = sprintf('%d common target genes', nrow(ht_df)))
+dev.off()
+source('lib.R')
+library(VennDiagram)
+###
+aso_07_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_07.DE_Summary'), as.is=TRUE, header=TRUE) %>%
+# p002@AC013394.2  =>  AC013394.2
+mutate(geneSymbol = gsub('^p\\d+\\@', '', geneSymbol)) %>%
+# SPNS1;p002@RP11-264B17   =>   SPNS1
+mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol))
+head(aso_07_df)
+aso_10_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_10.DE_Summary'), as.is=TRUE, header=TRUE) %>%
+mutate(geneSymbol = gsub('p\\d+\\@', '', geneSymbol)) %>%
+# SPNS1;p002@RP11-264B17   =>   SPNS1
+mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol))
+head(aso_10_df)
+from_mouse_df <- read.delim(paste0(DATA_DIR, 'chaserr_orthologs.txt'), as.is=TRUE, header=TRUE) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', human_gene_name))
+head(from_mouse_df)
+aso_07_v <- unique(aso_07_df$geneSymbol)
+aso_10_v <- unique(aso_10_df$geneSymbol)
+mouse_v <- unique(from_mouse_df$geneSymbol)
+common3_v <- Reduce(intersect, list(aso_07_v, aso_10_v, mouse_v))
+# Do not create log file: https://stackoverflow.com/a/36812214/310453
+futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
+?venn.diagram
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+#  cat.pos = c(-32, 27),
+#  cat.dist = c(0.055, 0.055),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+#  cat.pos = c(-32, 27),
+cat.dist = c(0.055, 0.055),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+venn.diagram(
+x = list(aso_07_v, aso_10_v),
+category.names = c(
+paste("ASO-07,\nn = ", length(aso_07_v)),
+paste("ASO-10,\nn = ", length(aso_10_v))),
+cat.fontface = "bold",
+cat.pos = c(-40, 40),
+cat.dist = c(0.04, 0.04),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_aso.png'),
+output=TRUE
+)
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+# cat.pos = c(-32, 27),
+cat.dist = c(0.08, 0.08),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+cat.pos = c(-32, 27),
+cat.dist = c(0.08, 0.08),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+?venn.diagram
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+# cat.pos = c(-32, 27),
+cat.dist = c(0.08, 0.08, 0.01),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+# cat.pos = c(-32, 27),
+cat.dist = c(0.04, 0.04, 0.02),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+cat.pos = c(-32, 27, 180),
+cat.dist = c(0.08, 0.02, 0.02),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+cat.pos = c(-12, 12, 180),
+cat.dist = c(0.08, 0.08, 0.02),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+cat.pos = c(-15, 15, 180),
+cat.dist = c(0.05, 0.05, 0.02),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+cat.pos = c(-15, 15, 180),
+cat.dist = c(0.05, 0.05, 0.02),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.pdf'),
+output=TRUE
+)
+?venn.diagram
+venn.diagram(
+x = list(aso_07_v, aso_10_v, mouse_v),
+category.names = c(
+paste("ASO_G0272888_AD_07,\nn = ", length(aso_07_v)),
+paste("ASO_G0272888_AD_10,\nn = ", length(aso_10_v)),
+paste("Orthologs of the mEFs Chaserr-/- DEGs, n = ", length(mouse_v))),
+cat.fontface = "bold",
+cat.pos = c(-15, 15, 180),
+cat.dist = c(0.05, 0.05, 0.02),
+filename = paste0(OUT_DIR, 'other/chaserr_venn_3.png'),
+output=TRUE
+)
+source('lib.R')
+library(VennDiagram)
+###
+aso_07_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_07.DE_Summary'), as.is=TRUE, header=TRUE) %>%
+# p002@AC013394.2  =>  AC013394.2
+mutate(geneSymbol = gsub('^p\\d+\\@', '', geneSymbol)) %>%
+# SPNS1;p002@RP11-264B17   =>   SPNS1
+mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol)) %>%
+mutate(group = 'ASO_G0272888_AD_07') %>%
+select(geneSymbol, log2FC, group)
+head(aso_07_df)
+aso_10_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_10.DE_Summary'), as.is=TRUE, header=TRUE) %>%
+mutate(geneSymbol = gsub('p\\d+\\@', '', geneSymbol)) %>%
+# SPNS1;p002@RP11-264B17   =>   SPNS1
+mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol)) %>%
+mutate(group = 'ASO_G0272888_AD_10') %>%
+select(geneSymbol, log2FC, group)
+head(aso_10_df)
+from_mouse_df <- read.delim(paste0(DATA_DIR, 'chaserr_orthologs.txt'), as.is=TRUE, header=TRUE) %>%
+mutate(group = 'Chaserr-/- mEFs') %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', human_gene_name)) %>%
+rename(log2FC = log2fc) %>%
+select(geneSymbol, log2FC, group)
+head(from_mouse_df)
+df <- rbind(aso_07_df, aso_10_df, from_mouse_df) %>%
+filter(!is.na(log2FC)) %>%
+mutate(type = ifelse(log2FC > 0, 'up', 'down')) %>%
+group_by(group, type) %>%
+summarise(n=n())
+UP_DOWN_COLS = c('up' = 'darkgreen', 'down' = 'red')
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+scale_fill_manual(
+name = 'Expression change',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS))
+ggsave('chaserr_up_down.pdf', path = paste0(OUT_DIR, 'other'), width = 7, height = 9)
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+scale_fill_manual(
+name = 'Expression change',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS))
+ggsave('chaserr_up_down.pdf', path = OUT_DIR, width = 7, height = 9)
+source('lib.R')
+###
+aso_07_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_07.DE_Summary'), as.is=TRUE, header=TRUE) %>%
+# p002@AC013394.2  =>  AC013394.2
+mutate(geneSymbol = gsub('^p\\d+\\@', '', geneSymbol)) %>%
+# SPNS1;p002@RP11-264B17   =>   SPNS1
+mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol)) %>%
+mutate(group = 'ASO_G0272888_AD_07') %>%
+select(geneSymbol, log2FC, group)
+head(aso_07_df)
+aso_10_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_10.DE_Summary'), as.is=TRUE, header=TRUE) %>%
+mutate(geneSymbol = gsub('p\\d+\\@', '', geneSymbol)) %>%
+# SPNS1;p002@RP11-264B17   =>   SPNS1
+mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol)) %>%
+mutate(group = 'ASO_G0272888_AD_10') %>%
+select(geneSymbol, log2FC, group)
+head(aso_10_df)
+from_mouse_df <- read.delim(paste0(DATA_DIR, 'chaserr_orthologs.txt'), as.is=TRUE, header=TRUE) %>%
+mutate(group = 'Chaserr-/- mEFs') %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', human_gene_name)) %>%
+rename(log2FC = log2fc) %>%
+select(geneSymbol, log2FC, group)
+head(from_mouse_df)
+df <- rbind(aso_07_df, aso_10_df, from_mouse_df) %>%
+filter(!is.na(log2FC)) %>%
+mutate(type = ifelse(log2FC > 0, 'up', 'down')) %>%
+group_by(group, type) %>%
+summarise(n=n())
+UP_DOWN_COLS = c('up' = 'darkgreen', 'down' = 'red')
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+scale_fill_manual(
+name = 'Expression\nchange',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS))
+ggsave('chaserr_up_down.pdf', path = OUT_DIR, width = 5, height = 7)
+source('lib.R')
+###
+aso_07_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_07.DE_Summary'), as.is=TRUE, header=TRUE) %>%
+# p002@AC013394.2  =>  AC013394.2
+mutate(geneSymbol = gsub('^p\\d+\\@', '', geneSymbol)) %>%
+# SPNS1;p002@RP11-264B17   =>   SPNS1
+mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol)) %>%
+mutate(group = 'ASO_G0272888_AD_07') %>%
+select(geneSymbol, log2FC, group)
+head(aso_07_df)
+aso_10_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_10.DE_Summary'), as.is=TRUE, header=TRUE) %>%
+mutate(geneSymbol = gsub('p\\d+\\@', '', geneSymbol)) %>%
+# SPNS1;p002@RP11-264B17   =>   SPNS1
+mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol)) %>%
+mutate(group = 'ASO_G0272888_AD_10') %>%
+select(geneSymbol, log2FC, group)
+head(aso_10_df)
+from_mouse_df <- read.delim(paste0(DATA_DIR, 'chaserr_orthologs.txt'), as.is=TRUE, header=TRUE) %>%
+mutate(group = 'Chaserr-/- mEFs') %>%
+# AC013394.2  =>  AC013394
+mutate(geneSymbol = gsub('\\.\\d+$', '', human_gene_name)) %>%
+rename(log2FC = log2fc) %>%
+select(geneSymbol, log2FC, group)
+head(from_mouse_df)
+df <- rbind(aso_07_df, aso_10_df, from_mouse_df) %>%
+filter(!is.na(log2FC)) %>%
+mutate(type = ifelse(log2FC > 0, 'up', 'down')) %>%
+group_by(group, type) %>%
+summarise(n=n())
+UP_DOWN_COLS = c('up' = 'darkgreen', 'down' = 'red')
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+scale_fill_manual(
+name = 'Expression\nchange',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS))
+ggsave('chaserr_up_down.pdf', path = OUT_DIR, width = 5, height = 7)
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+#  theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+scale_fill_manual(
+name = 'Expression\nchange',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS))
+ggsave('chaserr_up_down.pdf', path = OUT_DIR, width = 5, height = 7)
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+#  theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+coord_flip() +
+scale_fill_manual(
+name = 'Expression\nchange',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS))
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+#  theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+coord_flip() +
+scale_fill_manual(
+name = 'Expression\nchange',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS))
+ggsave('chaserr_up_down.pdf', path = OUT_DIR, width = 8, height = 5)
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+#  theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+coord_flip() +
+scale_fill_manual(
+name = 'Expression\nchange',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS))
+ggsave('chaserr_up_down.pdf', path = OUT_DIR, width = 9, height = 4)
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+#  theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+coord_flip() +
+scale_fill_manual(
+name = 'Expression\nchange',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS)) +
+theme(legend.position = "top")
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+#  theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+coord_flip() +
+scale_fill_manual(
+name = 'Expression\nchange',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS)) +
+theme(legend.position = "top")
+ggsave('chaserr_up_down.pdf', path = OUT_DIR, width = 9, height = 4)
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+#  theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+coord_flip() +
+scale_fill_manual(
+name = 'Expression change',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS)) +
+theme(legend.position = "top")
+ggsave('chaserr_up_down.pdf', path = OUT_DIR, width = 9, height = 5)
+df %>%
+mutate(type = factor(type, levels=names(UP_DOWN_COLS))) %>%
+ggplot() +
+aes(x = group, y=n, fill = type) +
+geom_bar(stat = 'identity', col='black') +
+#  theme_bw() +
+xlab('') +
+ylab('Number of differentially expressed genes') +
+coord_flip() +
+scale_fill_manual(
+name = 'Expression change',
+values = UP_DOWN_COLS,
+breaks = names(UP_DOWN_COLS)) +
+theme(legend.position = "top")
+ggsave('chaserr_up_down.pdf', path = OUT_DIR, width = 9, height = 4)

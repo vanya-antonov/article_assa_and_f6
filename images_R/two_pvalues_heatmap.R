@@ -101,3 +101,8 @@ dev.off()
 # Number of unique genes = 31
 good_df %>% pull(geneName) %>% unique() %>% length()
 
+
+good_df %>%
+  left_join(gcorr_df, by = 'aso_id') %>%
+  mutate(gcorr_pvalue = ifelse(is.na(gcorr_pvalue), 1, gcorr_pvalue)) %>%
+  filter(gcorr_pvalue < 0.01)
