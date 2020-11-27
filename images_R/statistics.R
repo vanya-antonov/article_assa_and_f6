@@ -49,3 +49,51 @@ aso_names %>%
   pull(geneID) %>%
   unique() %>%
   length()
+
+
+###
+# Comparing with the RISE database  ----
+rm(list = ls())
+source('lib.R')
+
+aso_07_df <- read_DE_summary_file(paste0(DATA_DIR, 'ASO_G0272888_AD_07.DE_Summary'))
+aso_10_df <- read_DE_summary_file(paste0(DATA_DIR, 'ASO_G0272888_AD_10.DE_Summary'))
+from_mouse_df <- read.delim(paste0(DATA_DIR, 'chaserr_orthologs.txt'), as.is=TRUE, header=TRUE) %>%
+  # AC013394.2  =>  AC013394
+  mutate(geneSymbol = gsub('\\.\\d+$', '', human_gene_name))
+head(aso_07_df)
+head(from_mouse_df)
+
+rise_df <- read.csv(paste0(DATA_DIR, 'chaserr_RISE_db.csv'), as.is = TRUE)
+head(rise_df)
+
+aso_07_v <- unique(aso_07_df$geneSymbol)
+aso_10_v <- unique(aso_10_df$geneSymbol)
+mouse_v <- unique(from_mouse_df$geneSymbol)
+rise_v <- unique(rise_df$Gene.name)
+
+common3_v <- Reduce(intersect, list(aso_07_v, aso_10_v, mouse_v))
+
+# "TNPO2", p-value = 0.1293645
+rise_and_10_v <- intersect(rise_v, aso_10_v)
+get_hgd_pvalue(all_balls=20000,
+               red_balls=length(aso_10_v),
+               drawn_balls=length(rise_v),
+               drawn_red=length(rise_and_10_v))
+
+# "NUP153", p-value = 0.2442752
+rise_and_07_v <- intersect(rise_v, aso_07_v)
+aso_07_df %>% filter(geneSymbol == 'NUP153')
+get_hgd_pvalue(all_balls=20000,
+               red_balls=length(aso_07_v),
+               drawn_balls=length(rise_v),
+               drawn_red=length(rise_and_07_v))
+
+
+aso_07_and_10_v <- unique(c(aso_07_v, aso_10_v))
+rise_and_07_10_v <- intersect(rise_v, aso_07_and_10_v)
+get_hgd_pvalue(all_balls=NUM_HUMAN_GENES,
+               red_balls=length(aso_07_and_10_v),
+               drawn_balls=length(rise_v),
+               drawn_red=length(rise_and_07_10_v))
+

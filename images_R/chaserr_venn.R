@@ -5,22 +5,8 @@ library(VennDiagram)
 
 ###
 
-aso_07_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_07.DE_Summary'), as.is=TRUE, header=TRUE) %>%
-  # p002@AC013394.2  =>  AC013394.2
-  mutate(geneSymbol = gsub('^p\\d+\\@', '', geneSymbol)) %>%
-  # SPNS1;p002@RP11-264B17   =>   SPNS1
-  mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
-  # AC013394.2  =>  AC013394
-  mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol))
-head(aso_07_df)
-
-aso_10_df <- read.delim(paste0(DATA_DIR, 'ASO_G0272888_AD_10.DE_Summary'), as.is=TRUE, header=TRUE) %>%
-  mutate(geneSymbol = gsub('p\\d+\\@', '', geneSymbol)) %>%
-  # SPNS1;p002@RP11-264B17   =>   SPNS1
-  mutate(geneSymbol = gsub(';.*$', '', geneSymbol)) %>%
-  # AC013394.2  =>  AC013394
-  mutate(geneSymbol = gsub('\\.\\d+$', '', geneSymbol))
-head(aso_10_df)
+aso_07_df <- read_DE_summary_file(paste0(DATA_DIR, 'ASO_G0272888_AD_07.DE_Summary'))
+aso_10_df <- read_DE_summary_file(paste0(DATA_DIR, 'ASO_G0272888_AD_10.DE_Summary'))
 
 from_mouse_df <- read.delim(paste0(DATA_DIR, 'chaserr_orthologs.txt'), as.is=TRUE, header=TRUE) %>%
   # AC013394.2  =>  AC013394
